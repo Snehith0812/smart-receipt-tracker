@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+</head>
+<body>
+
+<h2>Login / Signup</h2>
+
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+
+<button onclick="signup()">Signup</button>
+<button onclick="login()">Login</button>
+
+<script>
+const API = "http://localhost:5000";
+
+async function signup() {
+  await fetch(API + "/api/signup", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      email: email.value,
+      password: password.value
+    })
+  });
+  alert("Signup successful");
+}
+
+async function login() {
+  const res = await fetch(API + "/api/login", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      email: email.value,
+      password: password.value
+    })
+  });
+
+  const data = await res.json();
+  localStorage.setItem("token", data.token);
+
+  window.location = "index.html";
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Expense Tracker</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2"></script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>💰 Smart Expense Tracker</h1>
+
+  <div class="card">
+    <input id="merchant" placeholder="Merchant">
+    <input id="amount" placeholder="Amount">
+
+    <button onclick="addExpense()">➕ Add Expense</button>
+    <button onclick="simulatePayment()">🤖 Auto Detect</button>
+  </div>
+
+  <div class="card">
+    <h3>🧾 Scan Receipt</h3>
+    <input type="file" accept="image/*" onchange="scanReceipt(event)">
+    <p id="ocrResult"></p>
+  </div>
+
+  <div class="card">
+    <h2>Total: ₹<span id="total">0</span></h2>
+    <button onclick="exportExcel()">📄 Export Excel</button>
+  </div>
+
+  <div class="card">
+    <canvas id="chart"></canvas>
+  </div>
+
+  <div class="card">
+    <table>
+      <tr>
+        <th>Merchant</th>
+        <th>Amount</th>
+        <th>Category</th>
+        <th>Date</th>
+      </tr>
+      <tbody id="table"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
