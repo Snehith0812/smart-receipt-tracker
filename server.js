@@ -78,10 +78,10 @@ app.post("/api/add", auth, (req, res) => {
 });
 
 // Get receipts
-app.get("/api/receipts", auth, (req, res) => {
-  const userData = receipts.filter(r => r.user === req.user.email);
-  res.json(userData);
+app.get("/", (req, res) => {
+  res.send("Backend is live 🚀");
 });
+
 
 // Export Excel
 app.get("/api/export", auth, async (req, res) => {
