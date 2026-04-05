@@ -6,27 +6,44 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const app = express();
-app.use(cors());
+
+// ✅ Middleware
+app.use(cors({
+  origin: "*"
+}));
 app.use(bodyParser.json());
 
 const SECRET = "SECRET_KEY";
 
+// In-memory storage (for demo)
 let users = [];
 let receipts = [];
 
-// Signup
+// 🏠 Home route
+app.get("/", (req, res) => {
+  res.send("Smart Receipt Tracker API is LIVE 🚀");
+});
+
+// 🔐 Signup
 app.post("/api/signup", async (req, res) => {
   const { email, password } = req.body;
+
+  const existingUser = users.find(u => u.email === email);
+  if (existingUser) {
+    return res.status(400).send("User already exists");
+  }
+
   const hash = await bcrypt.hash(password, 10);
   users.push({ email, password: hash });
+
   res.send("User created");
 });
 
-// Login
+// 🔑 Login
 app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
-  const user = users.find(u => u.email === email);
 
+  const user = users.find(u => u.email === email);
   if (!user) return res.status(400).send("User not found");
 
   const valid = await bcrypt.compare(password, user.password);
@@ -36,9 +53,10 @@ app.post("/api/login", async (req, res) => {
   res.json({ token });
 });
 
-// Auth middleware
+// 🔒 Auth middleware
 function auth(req, res, next) {
   const token = req.headers.authorization;
+
   if (!token) return res.status(403).send("No token");
 
   try {
@@ -50,17 +68,18 @@ function auth(req, res, next) {
   }
 }
 
-// Categorization
+// 🧠 Categorization
 function categorize(text) {
   text = text.toLowerCase();
 
   if (text.includes("zomato") || text.includes("food")) return "Food";
   if (text.includes("uber") || text.includes("ola")) return "Travel";
   if (text.includes("amazon")) return "Shopping";
+
   return "Others";
 }
 
-// Add expense
+// ➕ Add expense
 app.post("/api/add", auth, (req, res) => {
   const { merchant, amount } = req.body;
 
@@ -77,13 +96,13 @@ app.post("/api/add", auth, (req, res) => {
   res.json(data);
 });
 
-// Get receipts
-app.get("/", (req, res) => {
-  res.send("Backend is live 🚀");
+// 📊 Get receipts
+app.get("/api/receipts", auth, (req, res) => {
+  const userData = receipts.filter(r => r.user === req.user.email);
+  res.json(userData);
 });
 
-
-// Export Excel
+// 📤 Export Excel
 app.get("/api/export", auth, async (req, res) => {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Receipts");
@@ -98,15 +117,18 @@ app.get("/api/export", auth, async (req, res) => {
   const userData = receipts.filter(r => r.user === req.user.email);
   sheet.addRows(userData);
 
-  res.setHeader("Content-Disposition", "attachment; filename=receipts.xlsx");
+  res.setHeader(
+    "Content-Disposition",
+    "attachment; filename=receipts.xlsx"
+  );
+
   await workbook.xlsx.write(res);
   res.end();
 });
 
-// Start server
+// 🚀 Start server
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
