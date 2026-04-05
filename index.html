@@ -2,7 +2,12 @@
 <html>
 <head>
   <title>Smart Expense Tracker</title>
-
+  <script>
+  if (!localStorage.getItem("token")) {
+    window.location = "login.html";
+  }
+</script>
+<script src="script.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2"></script>
 
@@ -31,7 +36,7 @@
 
   <div class="card">
     <h2>Total: ₹<span id="total">0</span></h2>
-    <button onclick="exportExcel()">📄 Export Excel</button>
+    <button onclick="exportExcel()">Export Excel</button>
   </div>
 
   <div class="card">
