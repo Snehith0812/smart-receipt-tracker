@@ -102,7 +102,7 @@ app.get("/api/receipts", auth, (req, res) => {
   res.json(userData);
 });
 
-// 📤 Export Excel
+// 📤 Export Excel (✅ FIXED HERE)
 app.get("/api/export", auth, async (req, res) => {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Receipts");
@@ -116,6 +116,12 @@ app.get("/api/export", auth, async (req, res) => {
 
   const userData = receipts.filter(r => r.user === req.user.email);
   sheet.addRows(userData);
+
+  // ✅ IMPORTANT HEADERS (ADD THIS)
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
 
   res.setHeader(
     "Content-Disposition",
