@@ -102,34 +102,49 @@ app.get("/api/receipts", auth, (req, res) => {
   res.json(userData);
 });
 
-// 📤 Export Excel (✅ FIXED HERE)
+// 📤 Export Excel (🔥 FINAL FIXED VERSION)
 app.get("/api/export", auth, async (req, res) => {
-  const workbook = new ExcelJS.Workbook();
-  const sheet = workbook.addWorksheet("Receipts");
+  try {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Receipts");
 
-  sheet.columns = [
-    { header: "Merchant", key: "merchant" },
-    { header: "Amount", key: "amount" },
-    { header: "Category", key: "category" },
-    { header: "Date", key: "date" }
-  ];
+    sheet.columns = [
+      { header: "Merchant", key: "merchant", width: 25 },
+      { header: "Amount", key: "amount", width: 10 },
+      { header: "Category", key: "category", width: 15 },
+      { header: "Date", key: "date", width: 25 }
+    ];
 
-  const userData = receipts.filter(r => r.user === req.user.email);
-  sheet.addRows(userData);
+    const userData = receipts.filter(r => r.user === req.user.email);
 
-  // ✅ IMPORTANT HEADERS (ADD THIS)
-  res.setHeader(
-    "Content-Type",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-  );
+    // ✅ Proper row formatting
+    userData.forEach(r => {
+      sheet.addRow({
+        merchant: r.merchant,
+        amount: r.amount,
+        category: r.category,
+        date: new Date(r.date).toLocaleString()
+      });
+    });
 
-  res.setHeader(
-    "Content-Disposition",
-    "attachment; filename=receipts.xlsx"
-  );
+    // ✅ Headers (VERY IMPORTANT)
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
 
-  await workbook.xlsx.write(res);
-  res.end();
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=receipts.xlsx"
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error generating Excel");
+  }
 });
 
 // 🚀 Start server
