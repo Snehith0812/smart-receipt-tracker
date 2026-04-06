@@ -1,20 +1,29 @@
 const API = "https://smart-receipt-tracker-4.onrender.com";
 
+// 📊 Chart instance (FIX for chart refresh bug)
+let chartInstance = null;
+
 // 🔐 Signup
 async function signup() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
-  const res = await fetch(API + "/api/signup", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ email, password })
-  });
+  try {
+    const res = await fetch(API + "/api/signup", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ email, password })
+    });
 
-  const text = await res.text();
-  alert(text);
+    const text = await res.text();
+    alert(text);
 
-  if (res.ok) window.location = "login.html";
+    if (res.ok) window.location = "login.html";
+
+  } catch (err) {
+    console.error(err);
+    alert("Signup error");
+  }
 }
 
 // 🔑 Login
@@ -22,86 +31,113 @@ async function login() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
-  const res = await fetch(API + "/api/login", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ email, password })
-  });
+  try {
+    const res = await fetch(API + "/api/login", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ email, password })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (data.token) {
-    localStorage.setItem("token", data.token);
-    window.location = "index.html";
-  } else {
-    alert("Login failed");
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+      window.location = "index.html";
+    } else {
+      alert("Login failed");
+    }
+
+  } catch (err) {
+    console.error(err);
+    alert("Login error");
   }
 }
 
-// Token helper
+// 🔐 Token helper
 function getToken() {
   return localStorage.getItem("token");
 }
 
 // ➕ Add Expense
 async function addExpense() {
-  await fetch(API + "/api/add", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": getToken()
-    },
-    body: JSON.stringify({
-      merchant: document.getElementById("merchant").value,
-      amount: document.getElementById("amount").value
-    })
-  });
+  try {
+    await fetch(API + "/api/add", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": getToken()
+      },
+      body: JSON.stringify({
+        merchant: document.getElementById("merchant").value,
+        amount: document.getElementById("amount").value
+      })
+    });
 
-  loadData();
+    loadData();
+
+  } catch (err) {
+    console.error(err);
+    alert("Error adding expense");
+  }
 }
 
-// 📊 Load Data
+// 📊 Load Data + Analysis
 async function loadData() {
   const token = getToken();
   if (!token) return;
 
-  const res = await fetch(API + "/api/receipts", {
-    headers: { "Authorization": token }
-  });
+  try {
+    const res = await fetch(API + "/api/receipts", {
+      headers: { "Authorization": token }
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  let total = 0;
-  let html = "";
-  let categoryData = {};
+    let total = 0;
+    let html = "";
+    let categoryData = {};
 
-  data.forEach(r => {
-    total += Number(r.amount);
+    data.forEach(r => {
+      total += Number(r.amount);
 
-    categoryData[r.category] =
-      (categoryData[r.category] || 0) + Number(r.amount);
+      categoryData[r.category] =
+        (categoryData[r.category] || 0) + Number(r.amount);
 
-    html += `<tr>
-      <td>${r.merchant}</td>
-      <td>${r.amount}</td>
-      <td>${r.category}</td>
-      <td>${new Date(r.date).toLocaleString()}</td>
-    </tr>`;
-  });
+      html += `<tr>
+        <td>${r.merchant}</td>
+        <td>${r.amount}</td>
+        <td>${r.category}</td>
+        <td>${new Date(r.date).toLocaleString()}</td>
+      </tr>`;
+    });
 
-  document.getElementById("table").innerHTML = html;
-  document.getElementById("total").innerText = total;
+    document.getElementById("table").innerHTML = html;
+    document.getElementById("total").innerText = total;
 
-  new Chart(document.getElementById("chart"), {
-    type: "pie",
-    data: {
-      labels: Object.keys(categoryData),
-      datasets: [{ data: Object.values(categoryData) }]
+    // 📊 FIXED CHART (IMPORTANT)
+    const ctx = document.getElementById("chart");
+
+    if (chartInstance) {
+      chartInstance.destroy();
     }
-  });
+
+    chartInstance = new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels: Object.keys(categoryData),
+        datasets: [{
+          data: Object.values(categoryData)
+        }]
+      }
+    });
+
+  } catch (err) {
+    console.error(err);
+    alert("Error loading data");
+  }
 }
 
-// 🧾 OCR
+// 🧾 OCR Scan
 async function scanReceipt(event) {
   const file = event.target.files[0];
 
@@ -118,7 +154,7 @@ async function scanReceipt(event) {
   document.getElementById("merchant").value = text.split("\n")[0];
 }
 
-// 🤖 Auto fill
+// 🤖 Auto Fill
 function simulatePayment() {
   const samples = [
     "Paid ₹250 to Zomato",
@@ -132,24 +168,49 @@ function simulatePayment() {
   document.getElementById("merchant").value = msg.replace(/[^a-zA-Z ]/g, "");
 }
 
-// 📤 Export Excel
+// 📤 Export Excel (FIXED DOWNLOAD)
 async function exportExcel() {
-  const token = getToken();
+  try {
+    const token = getToken();
 
-  const res = await fetch(API + "/api/export", {
-    headers: { "Authorization": token }
-  });
+    if (!token) {
+      alert("Please login first");
+      return;
+    }
 
-  const blob = await res.blob();
+    const res = await fetch(API + "/api/export", {
+      method: "GET",
+      headers: {
+        "Authorization": token
+      }
+    });
 
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "receipts.xlsx";
-  a.click();
+    if (!res.ok) {
+      alert("Export failed");
+      return;
+    }
+
+    const blob = await res.blob();
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+
+    a.href = url;
+    a.download = "receipts.xlsx";
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    window.URL.revokeObjectURL(url);
+
+  } catch (err) {
+    console.error(err);
+    alert("Download error");
+  }
 }
 
-// 🚀 Load dashboard
+// 🚀 Auto load dashboard
 if (window.location.pathname.includes("index.html")) {
   loadData();
 }
