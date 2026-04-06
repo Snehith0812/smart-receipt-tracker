@@ -1,6 +1,44 @@
 const API = "https://smart-receipt-tracker-4.onrender.com";
 
-// Always get fresh token
+// 🔐 Signup
+async function signup() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const res = await fetch(API + "/api/signup", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ email, password })
+  });
+
+  const text = await res.text();
+  alert(text);
+
+  if (res.ok) window.location = "login.html";
+}
+
+// 🔑 Login
+async function login() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const res = await fetch(API + "/api/login", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await res.json();
+
+  if (data.token) {
+    localStorage.setItem("token", data.token);
+    window.location = "index.html";
+  } else {
+    alert("Login failed");
+  }
+}
+
+// Token helper
 function getToken() {
   return localStorage.getItem("token");
 }
@@ -24,8 +62,11 @@ async function addExpense() {
 
 // 📊 Load Data
 async function loadData() {
+  const token = getToken();
+  if (!token) return;
+
   const res = await fetch(API + "/api/receipts", {
-    headers: { "Authorization": getToken() }
+    headers: { "Authorization": token }
   });
 
   const data = await res.json();
@@ -51,7 +92,6 @@ async function loadData() {
   document.getElementById("table").innerHTML = html;
   document.getElementById("total").innerText = total;
 
-  // Chart
   new Chart(document.getElementById("chart"), {
     type: "pie",
     data: {
@@ -61,7 +101,7 @@ async function loadData() {
   });
 }
 
-// 🧾 OCR Scan
+// 🧾 OCR
 async function scanReceipt(event) {
   const file = event.target.files[0];
 
@@ -73,15 +113,12 @@ async function scanReceipt(event) {
   document.getElementById("ocrResult").innerText = text;
 
   const amountMatch = text.match(/\d+(\.\d{1,2})?/);
-  const amount = amountMatch ? amountMatch[0] : "";
+  document.getElementById("amount").value = amountMatch ? amountMatch[0] : "";
 
-  const merchant = text.split("\n")[0];
-
-  document.getElementById("merchant").value = merchant;
-  document.getElementById("amount").value = amount;
+  document.getElementById("merchant").value = text.split("\n")[0];
 }
 
-// 🤖 Auto Payment Simulation
+// 🤖 Auto fill
 function simulatePayment() {
   const samples = [
     "Paid ₹250 to Zomato",
@@ -89,53 +126,30 @@ function simulatePayment() {
     "Uber ₹300"
   ];
 
-  const msg = samples[Math.random() * samples.length | 0];
+  const msg = samples[Math.floor(Math.random() * samples.length)];
 
   document.getElementById("amount").value = msg.match(/\d+/)[0];
   document.getElementById("merchant").value = msg.replace(/[^a-zA-Z ]/g, "");
 }
 
-// 📤 Export Excel (🔥 FIXED)
+// 📤 Export Excel
 async function exportExcel() {
-  try {
-    const token = getToken();
+  const token = getToken();
 
-    if (!token) {
-      alert("Please login first");
-      return;
-    }
+  const res = await fetch(API + "/api/export", {
+    headers: { "Authorization": token }
+  });
 
-    const res = await fetch(API + "/api/export", {
-      method: "GET",
-      headers: {
-        "Authorization": token
-      }
-    });
+  const blob = await res.blob();
 
-    if (!res.ok) {
-      alert("Export failed");
-      return;
-    }
-
-    const blob = await res.blob();
-
-    // ✅ Force download
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "receipts.xlsx";
-
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-
-    window.URL.revokeObjectURL(url);
-
-  } catch (err) {
-    console.error(err);
-    alert("Download error");
-  }
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "receipts.xlsx";
+  a.click();
 }
 
-// 🚀 Load on start
-loadData();
+// 🚀 Load dashboard
+if (window.location.pathname.includes("index.html")) {
+  loadData();
+}

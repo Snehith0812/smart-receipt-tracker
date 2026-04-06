@@ -1,62 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Smart Expense Tracker</title>
-  <script>
+  <title>Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<script>
   if (!localStorage.getItem("token")) {
     window.location = "login.html";
   }
 </script>
-<script src="script.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2"></script>
 
-  <link rel="stylesheet" href="style.css">
-</head>
+<h2>Smart Receipt Tracker</h2>
 
-<body>
+<input id="merchant" placeholder="Merchant">
+<input id="amount" placeholder="Amount">
 
-<div class="container">
+<button onclick="addExpense()">Add</button>
+<button onclick="simulatePayment()">Auto Fill</button>
 
-  <h1>💰 Smart Expense Tracker</h1>
+<br><br>
 
-  <div class="card">
-    <input id="merchant" placeholder="Merchant">
-    <input id="amount" placeholder="Amount">
+<input type="file" onchange="scanReceipt(event)">
+<p id="ocrResult"></p>
 
-    <button onclick="addExpense()">➕ Add Expense</button>
-    <button onclick="simulatePayment()">🤖 Auto Detect</button>
-  </div>
+<br>
 
-  <div class="card">
-    <h3>🧾 Scan Receipt</h3>
-    <input type="file" accept="image/*" onchange="scanReceipt(event)">
-    <p id="ocrResult"></p>
-  </div>
+<button onclick="exportExcel()">Export Excel</button>
 
-  <div class="card">
-    <h2>Total: ₹<span id="total">0</span></h2>
-    <button onclick="exportExcel()">Export Excel</button>
-  </div>
+<h3>Total: ₹<span id="total">0</span></h3>
 
-  <div class="card">
-    <canvas id="chart"></canvas>
-  </div>
+<canvas id="chart"></canvas>
 
-  <div class="card">
-    <table>
-      <tr>
-        <th>Merchant</th>
-        <th>Amount</th>
-        <th>Category</th>
-        <th>Date</th>
-      </tr>
-      <tbody id="table"></tbody>
-    </table>
-  </div>
+<table border="1">
+  <thead>
+    <tr>
+      <th>Merchant</th>
+      <th>Amount</th>
+      <th>Category</th>
+      <th>Date</th>
+    </tr>
+  </thead>
+  <tbody id="table"></tbody>
+</table>
 
-</div>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js"></script>
+<script src="app.js"></script>
 
-<script src="script.js"></script>
 </body>
 </html>

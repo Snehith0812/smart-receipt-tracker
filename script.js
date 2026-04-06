@@ -1,4 +1,4 @@
-const API = "http://localhost:5000";
+const API = "https://smart-receipt-tracker-4.onrender.com";
 const token = localStorage.getItem("token");
 
 // ➕ Add Expense
