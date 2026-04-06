@@ -1,51 +1,145 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Dashboard</title>
+  <title>Smart Receipt Tracker</title>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      margin: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    input {
+      padding: 10px;
+      margin: 5px;
+      border-radius: 8px;
+      border: none;
+      width: 30%;
+    }
+
+    button {
+      padding: 10px 15px;
+      margin: 5px;
+      border-radius: 8px;
+      border: none;
+      background: #38bdf8;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0ea5e9;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+    }
+
+    .total {
+      font-size: 20px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #334155;
+      text-align: left;
+    }
+
+    th {
+      background: #0f172a;
+    }
+
+    canvas {
+      margin-top: 20px;
+    }
+
+    input[type="file"] {
+      width: auto;
+    }
+  </style>
 </head>
+
 <body>
 
-<script>
-  if (!localStorage.getItem("token")) {
-    window.location = "login.html";
-  }
-</script>
+<div class="container">
 
-<h2>Smart Receipt Tracker</h2>
+  <h1>💰 Smart Receipt Tracker</h1>
 
-<input id="merchant" placeholder="Merchant">
-<input id="amount" placeholder="Amount">
+  <div class="card">
+    <div class="actions">
+      <input id="merchant" placeholder="Merchant">
+      <input id="amount" placeholder="Amount">
 
-<button onclick="addExpense()">Add</button>
-<button onclick="simulatePayment()">Auto Fill</button>
+      <button onclick="addExpense()">Add</button>
+      <button onclick="simulatePayment()">Auto Fill</button>
+    </div>
 
-<br><br>
+    <br>
 
-<input type="file" onchange="scanReceipt(event)">
-<p id="ocrResult"></p>
+    <input type="file" onchange="scanReceipt(event)">
+    <p id="ocrResult"></p>
 
-<br>
+    <button onclick="exportExcel()">📤 Export Excel</button>
 
-<button onclick="exportExcel()">Export Excel</button>
+    <div class="total">Total: ₹<span id="total">0</span></div>
+  </div>
 
-<h3>Total: ₹<span id="total">0</span></h3>
+  <div class="card">
+    <h3>📊 Analytics</h3>
+    <canvas id="chart"></canvas>
+  </div>
 
-<canvas id="chart"></canvas>
+  <div class="card">
+    <h3>🧾 Transactions</h3>
 
-<table border="1">
-  <thead>
-    <tr>
-      <th>Merchant</th>
-      <th>Amount</th>
-      <th>Category</th>
-      <th>Date</th>
-    </tr>
-  </thead>
-  <tbody id="table"></tbody>
-</table>
+    <table>
+      <thead>
+        <tr>
+          <th>Merchant</th>
+          <th>Amount</th>
+          <th>Category</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody id="table"></tbody>
+    </table>
+  </div>
 
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js"></script>
+</div>
+
 <script src="app.js"></script>
 
 </body>
